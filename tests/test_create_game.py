@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
+from app.api.schemas import NEUTRAL, X
 from app.main import app
 
 
@@ -31,8 +32,25 @@ def test_make_move_returns_200() -> None:
 
     assert response.status_code == 200
 
+    data = response.json()
+
+    assert set(data.keys()) == {"game_id", "board"}
+    assert data["game_id"] == game_id
+    assert data["board"] == [
+        [NEUTRAL, NEUTRAL, NEUTRAL],
+        [NEUTRAL, X, NEUTRAL],
+        [NEUTRAL, NEUTRAL, NEUTRAL],
+    ]
+
 
 def test_make_move_returns_404_for_non_existent_game() -> None:
     response = client.post(f"/games/{uuid4}/moves", json={"x": 1, "y": 1})
 
     assert response.status_code == 404
+
+
+def test_make_move_returns_422_for_invalid_move() -> None:
+    for x, y in ((-1, 1), (1, -1), (1, 3), (3, 1)):
+        response = client.post(f"/games/{uuid4}/moves", json={"x": x, "y": y})
+
+        assert response.status_code == 422

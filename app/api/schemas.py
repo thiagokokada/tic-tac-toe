@@ -1,10 +1,14 @@
 from datetime import datetime
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
+NEUTRAL: Final = "-"
+X: Final = "X"
+O: Final = "O"
 
-Cell = Literal["-", "X", "O"]
+type Cell = Literal[NEUTRAL, X, O]
+type Board = list[list[Cell]]
 
 
 class CreateGameResponse(BaseModel):

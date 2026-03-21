@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.schemas import CreateGameResponse, MoveRequest, MoveResponse
+from app.api.schemas import NEUTRAL, X, Board, Cell, CreateGameResponse, MoveRequest, MoveResponse
 
 router = APIRouter(prefix="/games", tags=["games"])
 games: dict[str, dict] = {}
@@ -16,6 +16,7 @@ def create_game() -> CreateGameResponse:
     games[game_id] = {
         "game_id": game_id,
         "created_at": created_at,
+        "board": _new_board(),
     }
 
     return CreateGameResponse(
@@ -24,14 +25,31 @@ def create_game() -> CreateGameResponse:
     )
 
 
-@router.post("/{game_id}/moves", response_model=MoveResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{game_id}/moves", response_model=MoveResponse, status_code=status.HTTP_200_OK
+)
 def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
     if game_id in games:
         game = games[game_id]
     else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Game not found"
+        )
 
     return MoveResponse(
         game_id=game["game_id"],
-        board=[],
+        board=_apply_move(game["board"], x=move.y, y=move.y, cell=X),
     )
+
+
+def _new_board() -> Board:
+    return [
+        [NEUTRAL, NEUTRAL, NEUTRAL],
+        [NEUTRAL, NEUTRAL, NEUTRAL],
+        [NEUTRAL, NEUTRAL, NEUTRAL],
+    ]
+
+
+def _apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:
+    board[x][y] = cell
+    return board
