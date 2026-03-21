@@ -1,6 +1,6 @@
 import pytest
 
-from app.domain.board import apply_move, check_winner, new_board
+from app.domain.board import apply_move, check_draw, check_winner, new_board
 from app.domain.exceptions import CellOccupiedError
 from app.domain.schemas import Cell
 
@@ -175,3 +175,23 @@ def test_check_winner_returns_none_when_there_is_no_winner() -> None:
     ]
 
     assert check_winner(board) is None
+
+
+def test_check_draw_returns_true_for_full_board_without_winner() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.X],
+        [Cell.X, Cell.O, Cell.O],
+        [Cell.O, Cell.X, Cell.X],
+    ]
+
+    assert check_draw(board) is True
+
+
+def test_check_draw_returns_false_for_board_with_empty_cells() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.NEUTRAL],
+        [Cell.X, Cell.O, Cell.O],
+        [Cell.O, Cell.X, Cell.X],
+    ]
+
+    assert check_draw(board) is False

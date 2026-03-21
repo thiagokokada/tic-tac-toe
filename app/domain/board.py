@@ -36,3 +36,7 @@ def check_winner(board: Board) -> Cell | None:
             return first
 
     return None
+
+
+def check_draw(board: Board) -> bool:
+    return all(cell != Cell.NEUTRAL for row in board for cell in row)
