@@ -10,7 +10,7 @@ from app.api.schemas import (
     MoveResponse,
     MoveSummary,
 )
-from app.domain.board import make_computer_move, render_board
+from app.domain.board import make_computer_move
 from app.domain.exceptions import GameError, GameFinishedError, GameNotFoundError
 from app.services import game_service
 
@@ -20,7 +20,7 @@ games = game_service.games
 
 @router.post("", response_model=CreateGameResponse, status_code=status.HTTP_201_CREATED)
 def create_game() -> CreateGameResponse:
-    game = game_service.create_game()
+    game = game_service.create_game(computer_move_fn=make_computer_move)
 
     return CreateGameResponse(
         game_id=game.game_id,
@@ -57,7 +57,6 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             game_id=game_id,
             x=move.x,
             y=move.y,
-            computer_move_fn=make_computer_move,
         )
     except GameNotFoundError:
         raise HTTPException(
@@ -120,4 +119,4 @@ def get_board_text(game_id: str) -> str:
             detail="Game not found",
         )
 
-    return render_board(game.board)
+    return game.render_board()

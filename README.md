@@ -168,6 +168,7 @@ Example response:
 - Move coordinates are zero-based.
 - The computer move is random in the application.
 - `board.txt` is included as a small extra feature for a friendlier CLI/demo experience.
+- Took around 4 hours to implement.
 
 ## Assumptions And Trade-Offs
 
