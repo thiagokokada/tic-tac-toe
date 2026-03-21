@@ -16,22 +16,22 @@ from app.domain.board import (
     new_board,
 )
 from app.domain.exceptions import GameError
+from app.domain.game import Game
 from app.domain.schemas import Cell, GameStatus
 
 router = APIRouter(prefix="/games", tags=["games"])
-games: dict[str, dict] = {}
+games: dict[str, Game] = {}
 
 
 @router.post("", response_model=CreateGameResponse, status_code=status.HTTP_201_CREATED)
 def create_game() -> CreateGameResponse:
     game_id = str(uuid4())
     created_at = datetime.now(timezone.utc)
-    games[game_id] = {
-        "game_id": game_id,
-        "created_at": created_at,
-        "board": new_board(),
-        "status": GameStatus.IN_PROGRESS,
-    }
+    games[game_id] = Game(
+        game_id=game_id,
+        created_at=created_at,
+        board=new_board(),
+    )
 
     return CreateGameResponse(
         game_id=game_id,
@@ -53,14 +53,14 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             detail="Game not found",
         )
 
-    if game["status"] != GameStatus.IN_PROGRESS:
+    if game.status != GameStatus.IN_PROGRESS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Game is already finished",
         )
 
     try:
-        board = apply_move(game["board"], x=move.x, y=move.y, cell=Cell.X)
+        board = apply_move(game.board, x=move.x, y=move.y, cell=Cell.X)
     except GameError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -75,12 +75,12 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
         game_status = check_game_result(board)
         winner = check_winner(board)
 
-    game["board"] = board
-    game["status"] = game_status
+    game.board = board
+    game.status = game_status
     games[game_id] = game
 
     return MoveResponse(
-        game_id=game["game_id"],
+        game_id=game.game_id,
         status=game_status,
         board=board,
         winner=winner,
