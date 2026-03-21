@@ -1,8 +1,5 @@
-from datetime import datetime
 from enum import Enum
 from typing import Final
-
-from pydantic import BaseModel, Field
 
 
 class Cell(Enum):
@@ -22,20 +19,3 @@ class GameStatus(Enum):
 
     def __str__(self) -> str:
         return self.value
-
-
-class CreateGameResponse(BaseModel):
-    game_id: str
-    created_at: datetime
-
-
-class MoveRequest(BaseModel):
-    x: int = Field(ge=0, le=2)
-    y: int = Field(ge=0, le=2)
-
-
-class MoveResponse(BaseModel):
-    game_id: str
-    status: GameStatus
-    board: Board
-    winner: Cell | None = None

@@ -3,15 +3,14 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.domain.schemas import (
-    Cell,
+from app.api.schemas import (
     CreateGameResponse,
-    GameStatus,
     MoveRequest,
     MoveResponse,
 )
 from app.domain.board import apply_move, check_winner, new_board
 from app.domain.exceptions import GameError
+from app.domain.schemas import Cell, GameStatus
 
 router = APIRouter(prefix="/games", tags=["games"])
 games: dict[str, dict] = {}
