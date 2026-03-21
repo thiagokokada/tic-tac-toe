@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
-from app.api.schemas import NEUTRAL, X
+from app.api.schemas import Cell
 from app.main import app
 
 
@@ -37,9 +37,9 @@ def test_make_move_returns_200() -> None:
     assert set(data.keys()) == {"game_id", "board"}
     assert data["game_id"] == game_id
     assert data["board"] == [
-        [NEUTRAL, NEUTRAL, NEUTRAL],
-        [NEUTRAL, X, NEUTRAL],
-        [NEUTRAL, NEUTRAL, NEUTRAL],
+        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
     ]
 
 

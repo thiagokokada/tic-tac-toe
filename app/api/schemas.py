@@ -1,13 +1,15 @@
 from datetime import datetime
-from typing import Final, Literal
+from enum import Enum
+from typing import Final
 
 from pydantic import BaseModel, Field
 
-NEUTRAL: Final = "-"
-X: Final = "X"
-O: Final = "O"
 
-type Cell = Literal[NEUTRAL, X, O]
+class Cell(Enum):
+    NEUTRAL: Final = "-"
+    X: Final = "X"
+    O: Final = "O"  # noqa: E741
+
 type Board = list[list[Cell]]
 
 
@@ -23,4 +25,4 @@ class MoveRequest(BaseModel):
 
 class MoveResponse(BaseModel):
     game_id: str
-    board: list[list[Cell]]
+    board: Board

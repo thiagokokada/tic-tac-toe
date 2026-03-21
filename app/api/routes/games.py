@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.schemas import NEUTRAL, X, Board, Cell, CreateGameResponse, MoveRequest, MoveResponse
+from app.api.schemas import Board, Cell, CreateGameResponse, MoveRequest, MoveResponse
 
 router = APIRouter(prefix="/games", tags=["games"])
 games: dict[str, dict] = {}
@@ -38,15 +38,15 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
 
     return MoveResponse(
         game_id=game["game_id"],
-        board=_apply_move(game["board"], x=move.y, y=move.y, cell=X),
+        board=_apply_move(game["board"], x=move.y, y=move.y, cell=Cell.X),
     )
 
 
 def _new_board() -> Board:
     return [
-        [NEUTRAL, NEUTRAL, NEUTRAL],
-        [NEUTRAL, NEUTRAL, NEUTRAL],
-        [NEUTRAL, NEUTRAL, NEUTRAL],
+        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
     ]
 
 
