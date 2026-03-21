@@ -10,6 +10,9 @@ class Cell(Enum):
     X: Final = "X"
     O: Final = "O"  # noqa: E741
 
+    def __str__(self) -> str:
+        return self.value
+
 type Board = list[list[Cell]]
 
 

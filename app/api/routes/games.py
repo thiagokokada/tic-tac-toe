@@ -38,7 +38,7 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
 
     return MoveResponse(
         game_id=game["game_id"],
-        board=_apply_move(game["board"], x=move.y, y=move.y, cell=Cell.X),
+        board=_apply_move(game["board"], x=move.x, y=move.y, cell=Cell.X),
     )
 
 
