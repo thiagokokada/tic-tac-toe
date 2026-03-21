@@ -10,8 +10,8 @@ from app.api.schemas import (
     MoveResponse,
     MoveSummary,
 )
-from app.domain.board import make_computer_move
 from app.domain.exceptions import GameError, GameFinishedError, GameNotFoundError
+from app.domain.game import make_computer_move
 from app.services import game_service
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -77,7 +77,7 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
     return MoveResponse(
         game_id=game.id,
         status=game.status,
-        board=game.board,
+        board=game.board.data,
         winner=winner,
     )
 

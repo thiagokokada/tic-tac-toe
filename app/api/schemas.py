@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.domain.schemas import Board, Cell, GameStatus
+from app.domain.schemas import BoardData, Cell, GameStatus
 
 
 class CreateGameResponse(BaseModel):
@@ -30,7 +30,7 @@ class MoveSummary(BaseModel):
 class MoveResponse(BaseModel):
     game_id: str
     status: GameStatus
-    board: Board
+    board: BoardData
     winner: Cell | None = None
 
 

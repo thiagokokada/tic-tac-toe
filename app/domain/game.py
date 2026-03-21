@@ -1,17 +1,33 @@
+import random
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.domain.board import (
-    apply_move,
-    check_game_result,
-    check_winner,
-    make_computer_move,
-    new_board,
-    render_board,
-)
+from app.domain.board import Board
 from app.domain.exceptions import GameFinishedError
-from app.domain.schemas import Board, Cell, ComputerMoveFn, GameStatus
+from app.domain.schemas import (
+    Cell,
+    ComputerMoveFn,
+    ComputerMoveResult,
+    Coordinates,
+    GameStatus,
+)
+
+
+def make_computer_move(
+    board: Board,
+    rng: random.Random | None = None,
+) -> ComputerMoveResult:
+    moves = board.available_moves()
+    if not moves:
+        return None
+
+    if rng is None:
+        rng = random.Random()
+
+    x, y = rng.choice(moves)
+    board.apply_move(x=x, y=y, cell=Cell.O)
+    return Coordinates(x, y)
 
 
 @dataclass(slots=True)
@@ -25,16 +41,16 @@ class Move:
 class Game:
     id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    board: Board = field(default_factory=new_board)
+    board: Board = field(default_factory=Board)
     status: GameStatus = GameStatus.IN_PROGRESS
     moves: list[Move] = field(default_factory=list)
     computer_move_fn: ComputerMoveFn = make_computer_move
 
     def winner(self) -> Cell | None:
-        return check_winner(self.board)
+        return self.board.check_winner()
 
     def update_status(self) -> GameStatus:
-        self.status = check_game_result(self.board)
+        self.status = self.board.check_game_result()
         return self.status
 
     def ensure_in_progress(self) -> None:
@@ -42,7 +58,7 @@ class Game:
             raise GameFinishedError()
 
     def apply_move(self, x: int, y: int, player: Cell) -> None:
-        self.board = apply_move(self.board, x=x, y=y, cell=player)
+        self.board.apply_move(x=x, y=y, cell=player)
         self.moves.append(Move(player=player, x=x, y=y))
         self.update_status()
 
@@ -50,11 +66,11 @@ class Game:
         self.apply_move(x=x, y=y, player=Cell.X)
 
     def apply_computer_move(self) -> tuple[int, int] | None:
-        self.board, move = self.computer_move_fn(self.board)
+        move = self.computer_move_fn(self.board)
         if move is not None:
-            self.moves.append(Move(player=Cell.O, x=move[0], y=move[1]))
+            self.moves.append(Move(player=Cell.O, x=move.x, y=move.y))
         self.update_status()
-        return move
+        return None if move is None else (move.x, move.y)
 
     def render_board(self) -> str:
-        return render_board(self.board)
+        return self.board.render()

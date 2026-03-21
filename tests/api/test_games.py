@@ -6,8 +6,9 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.routes.games as games_routes
-from app.domain.board import make_computer_move
-from app.domain.schemas import Board, Cell, ComputerMoveResult, GameStatus
+from app.domain.board import Board
+from app.domain.game import make_computer_move
+from app.domain.schemas import Cell, ComputerMoveResult, GameStatus
 from app.main import app
 
 client = TestClient(app)
