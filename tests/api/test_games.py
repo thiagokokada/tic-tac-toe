@@ -7,21 +7,23 @@ from pytest import MonkeyPatch
 
 import app.api.routes.games as games_routes
 from app.domain.board import make_computer_move
-from app.domain.schemas import Board, Cell, GameStatus
+from app.domain.schemas import Board, Cell, ComputerMoveResult, GameStatus
 from app.main import app
 
 client = TestClient(app)
 
 
-def deterministic_make_computer_move(
-    board: list[list[Cell]],
-) -> tuple[Board, tuple[int, int] | None]:
-    return make_computer_move(board, rng=random.Random(0))
-
-
 @pytest.fixture(autouse=True)
-def clear_games() -> None:
+def setup(monkeypatch: MonkeyPatch) -> None:
+    def deterministic_make_computer_move(board: Board) -> ComputerMoveResult:
+        return make_computer_move(board, rng=random.Random(0))
+
     games_routes.games.clear()
+    monkeypatch.setattr(
+        games_routes,
+        "make_computer_move",
+        deterministic_make_computer_move,
+    )
 
 
 def test_create_game_returns_201() -> None:
@@ -39,10 +41,7 @@ def test_create_game_returns_201() -> None:
     assert isinstance(data["created_at"], str)
 
 
-def test_make_move_returns_200(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_make_move_returns_200() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -62,10 +61,7 @@ def test_make_move_returns_200(monkeypatch: MonkeyPatch) -> None:
     ]
 
 
-def test_make_move_in_non_neutral_space_returns_400(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_make_move_in_non_neutral_space_returns_400() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -88,12 +84,7 @@ def test_make_move_returns_422_for_invalid_move() -> None:
         assert response.status_code == 422
 
 
-def test_make_move_returns_player_won_when_x_completes_a_line(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_make_move_returns_player_won_when_x_completes_a_line() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
@@ -110,12 +101,7 @@ def test_make_move_returns_player_won_when_x_completes_a_line(
     ]
 
 
-def test_make_move_returns_400_when_game_is_already_finished(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_make_move_returns_400_when_game_is_already_finished() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
@@ -127,12 +113,7 @@ def test_make_move_returns_400_when_game_is_already_finished(
     assert response.json()["detail"] == "Game is already finished"
 
 
-def test_list_moves_returns_moves_in_chronological_order(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_list_moves_returns_moves_in_chronological_order() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -148,9 +129,7 @@ def test_list_moves_returns_moves_in_chronological_order(
     }
 
 
-def test_list_games_returns_games_in_chronological_order(
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_list_games_returns_games_in_chronological_order() -> None:
     first_game_id = client.post("/games").json()["game_id"]
     second_game_id = client.post("/games").json()["game_id"]
 
@@ -167,12 +146,7 @@ def test_list_games_returns_games_in_chronological_order(
     assert data["games"][1]["status"] == str(GameStatus.IN_PROGRESS)
 
 
-def test_get_board_text_returns_plain_text_board(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        games_routes, "make_computer_move", deterministic_make_computer_move
-    )
+def test_get_board_text_returns_plain_text_board() -> None:
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
