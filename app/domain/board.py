@@ -10,6 +10,15 @@ def new_board() -> Board:
     ]
 
 
+def available_moves(board: Board) -> list[tuple[int, int]]:
+    return [
+        (x, y)
+        for y, row in enumerate(board)
+        for x, cell in enumerate(row)
+        if cell == Cell.NEUTRAL
+    ]
+
+
 def apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:
     if (c := board[y][x]) != Cell.NEUTRAL:
         raise CellOccupiedError(x=x, y=y, cell=c)

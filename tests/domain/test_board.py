@@ -2,6 +2,7 @@ import pytest
 
 from app.domain.board import (
     apply_move,
+    available_moves,
     check_draw,
     check_game_result,
     check_winner,
@@ -16,6 +17,36 @@ def test_new_board_returns_empty_3x3_board() -> None:
         [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
         [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
         [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+    ]
+
+
+def test_available_moves_returns_all_coordinates_for_empty_board() -> None:
+    assert available_moves(new_board()) == [
+        (0, 0),
+        (1, 0),
+        (2, 0),
+        (0, 1),
+        (1, 1),
+        (2, 1),
+        (0, 2),
+        (1, 2),
+        (2, 2),
+    ]
+
+
+def test_available_moves_omits_occupied_cells() -> None:
+    board = [
+        [Cell.X, Cell.NEUTRAL, Cell.O],
+        [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+        [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
+    ]
+
+    assert available_moves(board) == [
+        (1, 0),
+        (0, 1),
+        (2, 1),
+        (1, 2),
+        (2, 2),
     ]
 
 
