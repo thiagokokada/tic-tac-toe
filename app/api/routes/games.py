@@ -3,7 +3,9 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.schemas import Board, Cell, CreateGameResponse, MoveRequest, MoveResponse
+from app.domain.schemas import Cell, CreateGameResponse, MoveRequest, MoveResponse
+from app.domain.board import apply_move, new_board
+from app.domain.exceptions import GameError
 
 router = APIRouter(prefix="/games", tags=["games"])
 games: dict[str, dict] = {}
@@ -16,7 +18,7 @@ def create_game() -> CreateGameResponse:
     games[game_id] = {
         "game_id": game_id,
         "created_at": created_at,
-        "board": _new_board(),
+        "board": new_board(),
     }
 
     return CreateGameResponse(
@@ -26,7 +28,9 @@ def create_game() -> CreateGameResponse:
 
 
 @router.post(
-    "/{game_id}/moves", response_model=MoveResponse, status_code=status.HTTP_200_OK
+    "/{game_id}/moves",
+    response_model=MoveResponse,
+    status_code=status.HTTP_200_OK,
 )
 def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
     if game_id in games:
@@ -37,25 +41,15 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             detail="Game not found",
         )
 
-    return MoveResponse(
-        game_id=game["game_id"],
-        board=_apply_move(game["board"], x=move.x, y=move.y, cell=Cell.X),
-    )
-
-
-def _new_board() -> Board:
-    return [
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-    ]
-
-
-def _apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:
-    if (c := board[x][y]) != Cell.NEUTRAL:
+    try:
+        board = apply_move(game["board"], x=move.x, y=move.y, cell=Cell.X)
+    except GameError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Position x={x}, y={y} is already occupied by '{c}'",
+            detail=str(ex),
         )
-    board[x][y] = cell
-    return board
+
+    game["board"] = board
+    games[game_id] = game
+
+    return MoveResponse(game_id=game["game_id"], board=board)
