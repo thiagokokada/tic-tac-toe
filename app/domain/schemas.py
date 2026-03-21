@@ -16,6 +16,14 @@ class Cell(Enum):
 type Board = list[list[Cell]]
 
 
+class GameStatus(Enum):
+    IN_PROGRESS: Final = "in_progress"
+    PLAYER_WON: Final = "player_won"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 class CreateGameResponse(BaseModel):
     game_id: str
     created_at: datetime
@@ -28,4 +36,6 @@ class MoveRequest(BaseModel):
 
 class MoveResponse(BaseModel):
     game_id: str
+    status: GameStatus
     board: Board
+    winner: Cell | None = None

@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
-from app.domain.schemas import Cell
+from app.domain.schemas import Cell, GameStatus
 from app.main import app
 
 
@@ -33,8 +33,10 @@ def test_make_move_returns_200() -> None:
 
     data = response.json()
 
-    assert set(data.keys()) == {"game_id", "board"}
+    assert set(data.keys()) == {"game_id", "status", "board", "winner"}
     assert data["game_id"] == game_id
+    assert data["status"] == str(GameStatus.IN_PROGRESS)
+    assert data["winner"] is None
     assert data["board"] == [
         [str(Cell.NEUTRAL), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
         [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
@@ -63,3 +65,27 @@ def test_make_move_returns_422_for_invalid_move() -> None:
         response = client.post(f"/games/{uuid4()}/moves", json={"x": x, "y": y})
 
         assert response.status_code == 422
+
+
+def test_make_move_returns_player_won_when_x_completes_a_line() -> None:
+    game_id = client.post("/games").json()["game_id"]
+
+    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
+    response = client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == str(GameStatus.PLAYER_WON)
+    assert response.json()["winner"] == str(Cell.X)
+
+
+def test_make_move_returns_400_when_game_is_already_finished() -> None:
+    game_id = client.post("/games").json()["game_id"]
+
+    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
+    client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
+    response = client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 1})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Game is already finished"

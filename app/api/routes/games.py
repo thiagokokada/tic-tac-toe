@@ -3,8 +3,14 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.domain.schemas import Cell, CreateGameResponse, MoveRequest, MoveResponse
-from app.domain.board import apply_move, new_board
+from app.domain.schemas import (
+    Cell,
+    CreateGameResponse,
+    GameStatus,
+    MoveRequest,
+    MoveResponse,
+)
+from app.domain.board import apply_move, check_winner, new_board
 from app.domain.exceptions import GameError
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -19,6 +25,7 @@ def create_game() -> CreateGameResponse:
         "game_id": game_id,
         "created_at": created_at,
         "board": new_board(),
+        "status": GameStatus.IN_PROGRESS,
     }
 
     return CreateGameResponse(
@@ -41,6 +48,12 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             detail="Game not found",
         )
 
+    if game["status"] != GameStatus.IN_PROGRESS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Game is already finished",
+        )
+
     try:
         board = apply_move(game["board"], x=move.x, y=move.y, cell=Cell.X)
     except GameError as ex:
@@ -49,7 +62,16 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             detail=str(ex),
         )
 
+    winner = check_winner(board)
+    game_status = GameStatus.PLAYER_WON if winner == Cell.X else GameStatus.IN_PROGRESS
+
     game["board"] = board
+    game["status"] = game_status
     games[game_id] = game
 
-    return MoveResponse(game_id=game["game_id"], board=board)
+    return MoveResponse(
+        game_id=game["game_id"],
+        status=game_status,
+        board=board,
+        winner=winner,
+    )
