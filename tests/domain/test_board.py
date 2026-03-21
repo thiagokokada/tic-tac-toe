@@ -1,4 +1,5 @@
 import pytest
+import random
 
 from app.domain.board import (
     apply_move,
@@ -6,6 +7,7 @@ from app.domain.board import (
     check_draw,
     check_game_result,
     check_winner,
+    make_computer_move,
     new_board,
 )
 from app.domain.exceptions import CellOccupiedError
@@ -48,6 +50,32 @@ def test_available_moves_omits_occupied_cells() -> None:
         (1, 2),
         (2, 2),
     ]
+
+
+def test_make_computer_move_places_o_in_available_position() -> None:
+    board = [
+        [Cell.X, Cell.NEUTRAL, Cell.O],
+        [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+        [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
+    ]
+
+    new_state, move = make_computer_move(board, rng=random.Random(0))
+
+    assert move in [(1, 0), (0, 1), (2, 1), (1, 2), (2, 2)]
+    assert new_state[move[1]][move[0]] == Cell.O
+
+
+def test_make_computer_move_returns_none_when_no_moves_are_available() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.X],
+        [Cell.X, Cell.O, Cell.O],
+        [Cell.O, Cell.X, Cell.X],
+    ]
+
+    new_state, move = make_computer_move(board, rng=random.Random(0))
+
+    assert new_state == board
+    assert move is None
 
 
 def test_apply_move_places_mark_for_all_coordinates() -> None:

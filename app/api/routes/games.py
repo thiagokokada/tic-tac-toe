@@ -10,9 +10,9 @@ from app.api.schemas import (
 )
 from app.domain.board import (
     apply_move,
-    available_moves,
     check_game_result,
     check_winner,
+    make_computer_move,
     new_board,
 )
 from app.domain.exceptions import GameError
@@ -71,8 +71,7 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
     winner = check_winner(board)
 
     if game_status == GameStatus.IN_PROGRESS:
-        computer_x, computer_y = available_moves(board)[0]
-        board = apply_move(board, x=computer_x, y=computer_y, cell=Cell.O)
+        board, _ = make_computer_move(board)
         game_status = check_game_result(board)
         winner = check_winner(board)
 

@@ -1,3 +1,5 @@
+import random
+
 from app.domain.exceptions import CellOccupiedError
 from app.domain.schemas import Board, Cell, GameStatus
 
@@ -17,6 +19,18 @@ def available_moves(board: Board) -> list[tuple[int, int]]:
         for x, cell in enumerate(row)
         if cell == Cell.NEUTRAL
     ]
+
+
+def make_computer_move(
+    board: Board,
+    rng: random.Random | None = None,
+) -> tuple[Board, tuple[int, int] | None]:
+    moves = available_moves(board)
+    if not moves:
+        return board, None
+
+    x, y = (rng.choice(moves) if rng is not None else random.choice(moves))
+    return apply_move(board, x=x, y=y, cell=Cell.O), (x, y)
 
 
 def apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:

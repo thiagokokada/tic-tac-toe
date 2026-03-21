@@ -1,12 +1,23 @@
+import random
 from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 
-from app.domain.schemas import Cell, GameStatus
+from app.domain.board import make_computer_move
+from app.domain.schemas import Board, Cell, GameStatus
+import app.api.routes.games as games_routes
 from app.main import app
+
+from pytest import MonkeyPatch
 
 
 client = TestClient(app)
+
+
+def deterministic_make_computer_move(
+    board: list[list[Cell]],
+) -> tuple[Board, tuple[int, int] | None]:
+    return make_computer_move(board, rng=random.Random(0))
 
 
 def test_create_game_returns_201() -> None:
@@ -24,7 +35,8 @@ def test_create_game_returns_201() -> None:
     assert isinstance(data["created_at"], str)
 
 
-def test_make_move_returns_200() -> None:
+def test_make_move_returns_200(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
     game_id = client.post("/games").json()["game_id"]
 
     response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -38,13 +50,14 @@ def test_make_move_returns_200() -> None:
     assert data["status"] == str(GameStatus.IN_PROGRESS)
     assert data["winner"] is None
     assert data["board"] == [
-        [str(Cell.O), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
-        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
         [str(Cell.NEUTRAL), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
+        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
+        [str(Cell.NEUTRAL), str(Cell.O), str(Cell.NEUTRAL)],
     ]
 
 
-def test_make_move_in_non_neutral_space_returns_400() -> None:
+def test_make_move_in_non_neutral_space_returns_400(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -67,29 +80,35 @@ def test_make_move_returns_422_for_invalid_move() -> None:
         assert response.status_code == 422
 
 
-def test_make_move_returns_player_won_when_x_completes_a_line() -> None:
+def test_make_move_returns_player_won_when_x_completes_a_line(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
     game_id = client.post("/games").json()["game_id"]
 
+    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
-    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
-    response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 2})
+    response = client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
 
     assert response.status_code == 200
     assert response.json()["status"] == str(GameStatus.PLAYER_WON)
     assert response.json()["winner"] == str(Cell.X)
     assert response.json()["board"] == [
-        [str(Cell.O), str(Cell.X), str(Cell.O)],
-        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
-        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
+        [str(Cell.X), str(Cell.X), str(Cell.X)],
+        [str(Cell.NEUTRAL), str(Cell.NEUTRAL), str(Cell.O)],
+        [str(Cell.NEUTRAL), str(Cell.O), str(Cell.NEUTRAL)],
     ]
 
 
-def test_make_move_returns_400_when_game_is_already_finished() -> None:
+def test_make_move_returns_400_when_game_is_already_finished(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
     game_id = client.post("/games").json()["game_id"]
 
+    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
-    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
-    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 2})
+    client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
     response = client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 1})
 
     assert response.status_code == 400
