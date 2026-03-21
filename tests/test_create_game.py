@@ -85,6 +85,16 @@ def test_make_move_returns_200() -> None:
         assert data["board"] == board
 
 
+def test_make_move_in_non_neutral_space_returns_400() -> None:
+    game_id = client.post("/games").json()["game_id"]
+
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+    response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Position x=1, y=1 is already occupied by 'X'"
+
+
 def test_make_move_returns_404_for_non_existent_game() -> None:
     response = client.post(f"/games/{uuid4()}/moves", json={"x": 1, "y": 1})
 
