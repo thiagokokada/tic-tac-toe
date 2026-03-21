@@ -15,8 +15,19 @@ class MoveRequest(BaseModel):
     y: int = Field(ge=0, le=2)
 
 
+class MoveSummary(BaseModel):
+    player: Cell
+    x: int
+    y: int
+
+
 class MoveResponse(BaseModel):
     game_id: str
     status: GameStatus
     board: Board
     winner: Cell | None = None
+
+
+class MoveListResponse(BaseModel):
+    game_id: str
+    moves: list[MoveSummary]

@@ -113,3 +113,22 @@ def test_make_move_returns_400_when_game_is_already_finished(
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Game is already finished"
+
+
+def test_list_moves_returns_moves_in_chronological_order(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    game_id = client.post("/games").json()["game_id"]
+
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+    response = client.get(f"/games/{game_id}/moves")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "game_id": game_id,
+        "moves": [
+            {"player": str(Cell.X), "x": 1, "y": 1},
+            {"player": str(Cell.O), "x": 1, "y": 2},
+        ],
+    }
