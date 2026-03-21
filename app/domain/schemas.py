@@ -16,6 +16,8 @@ type Board = list[list[Cell]]
 class GameStatus(Enum):
     IN_PROGRESS: Final = "in_progress"
     PLAYER_WON: Final = "player_won"
+    COMPUTER_WON: Final = "computer_won"
+    DRAW: Final = "draw"
 
     def __str__(self) -> str:
         return self.value

@@ -8,7 +8,7 @@ from app.api.schemas import (
     MoveRequest,
     MoveResponse,
 )
-from app.domain.board import apply_move, check_winner, new_board
+from app.domain.board import apply_move, check_game_result, check_winner, new_board
 from app.domain.exceptions import GameError
 from app.domain.schemas import Cell, GameStatus
 
@@ -61,8 +61,8 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
             detail=str(ex),
         )
 
+    game_status = check_game_result(board)
     winner = check_winner(board)
-    game_status = GameStatus.PLAYER_WON if winner == Cell.X else GameStatus.IN_PROGRESS
 
     game["board"] = board
     game["status"] = game_status

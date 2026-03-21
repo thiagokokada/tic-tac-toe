@@ -1,8 +1,14 @@
 import pytest
 
-from app.domain.board import apply_move, check_draw, check_winner, new_board
+from app.domain.board import (
+    apply_move,
+    check_draw,
+    check_game_result,
+    check_winner,
+    new_board,
+)
 from app.domain.exceptions import CellOccupiedError
-from app.domain.schemas import Cell
+from app.domain.schemas import Cell, GameStatus
 
 
 def test_new_board_returns_empty_3x3_board() -> None:
@@ -195,3 +201,43 @@ def test_check_draw_returns_false_for_board_with_empty_cells() -> None:
     ]
 
     assert check_draw(board) is False
+
+
+def test_check_game_result_returns_player_won() -> None:
+    board = [
+        [Cell.X, Cell.X, Cell.X],
+        [Cell.NEUTRAL, Cell.O, Cell.NEUTRAL],
+        [Cell.O, Cell.NEUTRAL, Cell.O],
+    ]
+
+    assert check_game_result(board) == GameStatus.PLAYER_WON
+
+
+def test_check_game_result_returns_computer_won() -> None:
+    board = [
+        [Cell.O, Cell.NEUTRAL, Cell.X],
+        [Cell.O, Cell.X, Cell.NEUTRAL],
+        [Cell.O, Cell.NEUTRAL, Cell.X],
+    ]
+
+    assert check_game_result(board) == GameStatus.COMPUTER_WON
+
+
+def test_check_game_result_returns_draw() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.X],
+        [Cell.X, Cell.O, Cell.O],
+        [Cell.O, Cell.X, Cell.X],
+    ]
+
+    assert check_game_result(board) == GameStatus.DRAW
+
+
+def test_check_game_result_returns_in_progress() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.X, Cell.O],
+        [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
+    ]
+
+    assert check_game_result(board) == GameStatus.IN_PROGRESS

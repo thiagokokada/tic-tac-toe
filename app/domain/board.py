@@ -1,5 +1,5 @@
 from app.domain.exceptions import CellOccupiedError
-from app.domain.schemas import Board, Cell
+from app.domain.schemas import Board, Cell, GameStatus
 
 
 def new_board() -> Board:
@@ -40,3 +40,16 @@ def check_winner(board: Board) -> Cell | None:
 
 def check_draw(board: Board) -> bool:
     return all(cell != Cell.NEUTRAL for row in board for cell in row)
+
+
+def check_game_result(board: Board) -> GameStatus:
+    winner = check_winner(board)
+
+    if winner == Cell.X:
+        return GameStatus.PLAYER_WON
+    if winner == Cell.O:
+        return GameStatus.COMPUTER_WON
+    if check_draw(board):
+        return GameStatus.DRAW
+
+    return GameStatus.IN_PROGRESS
