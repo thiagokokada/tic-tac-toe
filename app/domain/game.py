@@ -1,7 +1,7 @@
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import datetime
 import random
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from uuid import uuid4
 
 from app.domain.board import (
     apply_move,
@@ -9,10 +9,11 @@ from app.domain.board import (
     check_game_result,
     check_winner,
     make_computer_move,
+    new_board,
     render_board,
 )
 from app.domain.exceptions import GameFinishedError
-from app.domain.schemas import Board, Cell, GameStatus
+from app.domain.schemas import Board, Cell, ComputerMoveFn, GameStatus
 
 
 @dataclass(slots=True)
@@ -24,12 +25,12 @@ class Move:
 
 @dataclass(slots=True)
 class Game:
-    game_id: str
-    created_at: datetime
-    board: Board
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    board: Board = field(default_factory=new_board)
     status: GameStatus = GameStatus.IN_PROGRESS
     moves: list[Move] = field(default_factory=list)
-    computer_move_fn: Callable[[Board], tuple[Board, tuple[int, int] | None]] = make_computer_move
+    computer_move_fn: ComputerMoveFn = make_computer_move
 
     def available_moves(self) -> list[tuple[int, int]]:
         return available_moves(self.board)

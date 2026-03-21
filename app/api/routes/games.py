@@ -23,7 +23,7 @@ def create_game() -> CreateGameResponse:
     game = game_service.create_game(computer_move_fn=make_computer_move)
 
     return CreateGameResponse(
-        game_id=game.game_id,
+        game_id=game.id,
         created_at=game.created_at,
     )
 
@@ -37,7 +37,7 @@ def list_games() -> GameListResponse:
     return GameListResponse(
         games=[
             GameSummary(
-                game_id=game.game_id,
+                game_id=game.id,
                 created_at=game.created_at,
                 status=game.status,
             )
@@ -75,7 +75,7 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
         )
 
     return MoveResponse(
-        game_id=game.game_id,
+        game_id=game.id,
         status=game.status,
         board=game.board,
         winner=winner,
@@ -97,7 +97,7 @@ def list_moves(game_id: str) -> MoveListResponse:
         )
 
     return MoveListResponse(
-        game_id=game.game_id,
+        game_id=game.id,
         moves=[
             MoveSummary(player=move.player, x=move.x, y=move.y)
             for move in game.moves

@@ -1,29 +1,13 @@
-from collections.abc import Callable
-from datetime import datetime, timezone
-from uuid import uuid4
-
-from app.domain.board import new_board
 from app.domain.exceptions import GameNotFoundError
 from app.domain.game import Game, Move
-from app.domain.schemas import Board, Cell, GameStatus
-
-type ComputerMoveFn = Callable[[Board], tuple[Board, tuple[int, int] | None]]
+from app.domain.schemas import Cell, ComputerMoveFn, GameStatus
 
 games: dict[str, Game] = {}
 
 
-def create_game(
-    computer_move_fn: ComputerMoveFn,
-) -> Game:
-    game_id = str(uuid4())
-    created_at = datetime.now(timezone.utc)
-    game = Game(
-        game_id=game_id,
-        created_at=created_at,
-        board=new_board(),
-        computer_move_fn=computer_move_fn,
-    )
-    games[game_id] = game
+def create_game(computer_move_fn: ComputerMoveFn) -> Game:
+    game = Game(computer_move_fn=computer_move_fn)
+    games[game.id] = game
     return game
 
 
