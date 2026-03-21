@@ -16,3 +16,23 @@ def apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:
 
     board[y][x] = cell
     return board
+
+
+def check_winner(board: Board) -> Cell | None:
+    lines = [
+        board[0],
+        board[1],
+        board[2],
+        [board[0][0], board[1][0], board[2][0]],
+        [board[0][1], board[1][1], board[2][1]],
+        [board[0][2], board[1][2], board[2][2]],
+        [board[0][0], board[1][1], board[2][2]],
+        [board[0][2], board[1][1], board[2][0]],
+    ]
+
+    for line in lines:
+        first = line[0]
+        if first != Cell.NEUTRAL and line[0] == line[1] == line[2]:
+            return first
+
+    return None

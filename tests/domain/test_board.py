@@ -1,6 +1,6 @@
 import pytest
 
-from app.domain.board import apply_move, new_board
+from app.domain.board import apply_move, check_winner, new_board
 from app.domain.exceptions import CellOccupiedError
 from app.domain.schemas import Cell
 
@@ -119,3 +119,59 @@ def test_apply_move_raises_error_for_occupied_cell() -> None:
             match=rf"Position x={x}, y={y} is already occupied by 'X'",
         ):
             apply_move(board, x, y, Cell.O)
+
+
+def test_check_winner_detects_all_winning_lines() -> None:
+    for board in (
+        [
+            [Cell.X, Cell.X, Cell.X],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+        ],
+        [
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.X, Cell.X, Cell.X],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+        ],
+        [
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.X, Cell.X, Cell.X],
+        ],
+        [
+            [Cell.X, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.X, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.X, Cell.NEUTRAL, Cell.NEUTRAL],
+        ],
+        [
+            [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+        ],
+        [
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.X],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.X],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.X],
+        ],
+        [
+            [Cell.X, Cell.NEUTRAL, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.X],
+        ],
+        [
+            [Cell.NEUTRAL, Cell.NEUTRAL, Cell.X],
+            [Cell.NEUTRAL, Cell.X, Cell.NEUTRAL],
+            [Cell.X, Cell.NEUTRAL, Cell.NEUTRAL],
+        ],
+    ):
+        assert check_winner(board) == Cell.X
+
+
+def test_check_winner_returns_none_when_there_is_no_winner() -> None:
+    board = [
+        [Cell.X, Cell.O, Cell.NEUTRAL],
+        [Cell.NEUTRAL, Cell.X, Cell.O],
+        [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
+    ]
+
+    assert check_winner(board) is None
