@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from app.api.schemas import (
     CreateGameResponse,
@@ -9,7 +10,7 @@ from app.api.schemas import (
     MoveResponse,
     MoveSummary,
 )
-from app.domain.board import make_computer_move
+from app.domain.board import make_computer_move, render_board
 from app.domain.exceptions import GameError, GameFinishedError, GameNotFoundError
 from app.services import game_service
 
@@ -103,3 +104,20 @@ def list_moves(game_id: str) -> MoveListResponse:
             for move in game.moves
         ],
     )
+
+
+@router.get(
+    "/{game_id}/board.txt",
+    response_class=PlainTextResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_board_text(game_id: str) -> str:
+    try:
+        game = game_service.get_game(game_id)
+    except GameNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Game not found",
+        )
+
+    return render_board(game.board)

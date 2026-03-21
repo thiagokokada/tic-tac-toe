@@ -63,6 +63,7 @@ Available endpoints:
 - `POST /games/{game_id}/moves`
 - `GET /games/{game_id}/moves`
 - `GET /games`
+- `GET /games/{game_id}/board.txt`
 
 The player is always `X` and the computer is always `O`.
 
@@ -144,12 +145,29 @@ Example response:
 }
 ```
 
+Render the current board as plain text:
+
+```bash
+curl http://127.0.0.1:8000/games/7a9fbf66-633e-4b17-b42d-3e56bc7a3086/board.txt
+```
+
+Example response:
+
+```text
+- | - | -
+---------
+- | X | -
+---------
+- | O | -
+```
+
 ## Notes
 
 - Game state is currently stored in memory.
 - Restarting the app clears all games.
 - Move coordinates are zero-based.
 - The computer move is random in the application.
+- `board.txt` is included as a small extra feature for a friendlier CLI/demo experience.
 
 ## Assumptions And Trade-Offs
 

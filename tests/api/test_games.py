@@ -154,3 +154,22 @@ def test_list_games_returns_games_in_chronological_order(
     assert [game["game_id"] for game in data["games"]] == [first_game_id, second_game_id]
     assert data["games"][0]["status"] == str(GameStatus.IN_PROGRESS)
     assert data["games"][1]["status"] == str(GameStatus.IN_PROGRESS)
+
+
+def test_get_board_text_returns_plain_text_board(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    game_id = client.post("/games").json()["game_id"]
+
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+    response = client.get(f"/games/{game_id}/board.txt")
+
+    assert response.status_code == 200
+    assert response.text == (
+        "- | - | -\n"
+        "---------\n"
+        "- | X | -\n"
+        "---------\n"
+        "- | O | -"
+    )

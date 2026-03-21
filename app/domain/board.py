@@ -76,3 +76,10 @@ def check_game_result(board: Board) -> GameStatus:
         return GameStatus.DRAW
 
     return GameStatus.IN_PROGRESS
+
+
+def render_board(board: Board) -> str:
+    return "\n---------\n".join(
+        " | ".join(str(cell) for cell in row)
+        for row in board
+    )
