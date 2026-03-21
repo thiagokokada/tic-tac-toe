@@ -40,6 +40,8 @@ def make_computer_move(
 
 
 def apply_move(board: Board, x: int, y: int, cell: Cell) -> Board:
+    assert 0 <= x <= 2 and 0 <= y <= 2, f"Invalid coordinates: x={x}, y={y}"
+
     if (c := board[y][x]) != Cell.NEUTRAL:
         raise CellOccupiedError(x=x, y=y, cell=c)
 

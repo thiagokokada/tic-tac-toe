@@ -187,6 +187,15 @@ def test_apply_move_raises_error_for_occupied_cell() -> None:
             apply_move(board, x, y, Cell.O)
 
 
+def test_apply_move_asserts_valid_coordinates() -> None:
+    for x, y in ((-1, 1), (1, -1), (1, 3), (3, 1)):
+        with pytest.raises(
+            AssertionError,
+            match=rf"Invalid coordinates: x={x}, y={y}",
+        ):
+            apply_move(new_board(), x, y, Cell.X)
+
+
 def test_check_winner_detects_all_winning_lines() -> None:
     for board in (
         [
