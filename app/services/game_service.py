@@ -36,7 +36,7 @@ def make_move(
     game.apply_player_move(x=x, y=y)
 
     if game.status == GameStatus.IN_PROGRESS:
-        game.apply_computer_strategy()
+        game.apply_computer_move()
 
     games[game_id] = game
 

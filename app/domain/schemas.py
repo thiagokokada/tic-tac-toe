@@ -1,6 +1,15 @@
 from collections.abc import Callable
 from enum import Enum
-from typing import Final
+from typing import Final, NamedTuple
+
+type Board = list[list[Cell]]
+type ComputerMoveResult = tuple[Board, Coordinates | None]
+type ComputerMoveFn = Callable[[Board], tuple[Board, Coordinates | None]]
+
+
+class Coordinates(NamedTuple):
+    x: int
+    y: int
 
 
 class Cell(Enum):
@@ -10,11 +19,6 @@ class Cell(Enum):
 
     def __str__(self) -> str:
         return self.value
-
-
-type Board = list[list[Cell]]
-type Coordinates = tuple[int, int]
-type ComputerMoveFn = Callable[[Board], tuple[Board, Coordinates | None]]
 
 
 class GameStatus(Enum):
