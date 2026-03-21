@@ -28,3 +28,9 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy app tests
+
+      - name: Run ruff
+        run: uv run ruff format --check .
+
+      - name: Run ruff
+        run: uv run ruff check .

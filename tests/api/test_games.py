@@ -1,16 +1,14 @@
 import random
 from uuid import UUID, uuid4
 
-from fastapi.testclient import TestClient
-
-from app.domain.board import make_computer_move
-from app.domain.schemas import Board, Cell, GameStatus
-import app.api.routes.games as games_routes
-from app.main import app
-
 import pytest
+from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
+import app.api.routes.games as games_routes
+from app.domain.board import make_computer_move
+from app.domain.schemas import Board, Cell, GameStatus
+from app.main import app
 
 client = TestClient(app)
 
@@ -42,7 +40,9 @@ def test_create_game_returns_201() -> None:
 
 
 def test_make_move_returns_200(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -63,7 +63,9 @@ def test_make_move_returns_200(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_make_move_in_non_neutral_space_returns_400(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -89,7 +91,9 @@ def test_make_move_returns_422_for_invalid_move() -> None:
 def test_make_move_returns_player_won_when_x_completes_a_line(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
@@ -109,7 +113,9 @@ def test_make_move_returns_player_won_when_x_completes_a_line(
 def test_make_move_returns_400_when_game_is_already_finished(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
@@ -124,7 +130,9 @@ def test_make_move_returns_400_when_game_is_already_finished(
 def test_list_moves_returns_moves_in_chronological_order(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
@@ -151,7 +159,10 @@ def test_list_games_returns_games_in_chronological_order(
     assert response.status_code == 200
     data = response.json()
 
-    assert [game["game_id"] for game in data["games"]] == [first_game_id, second_game_id]
+    assert [game["game_id"] for game in data["games"]] == [
+        first_game_id,
+        second_game_id,
+    ]
     assert data["games"][0]["status"] == str(GameStatus.IN_PROGRESS)
     assert data["games"][1]["status"] == str(GameStatus.IN_PROGRESS)
 
@@ -159,17 +170,13 @@ def test_list_games_returns_games_in_chronological_order(
 def test_get_board_text_returns_plain_text_board(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(games_routes, "make_computer_move", deterministic_make_computer_move)
+    monkeypatch.setattr(
+        games_routes, "make_computer_move", deterministic_make_computer_move
+    )
     game_id = client.post("/games").json()["game_id"]
 
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
     response = client.get(f"/games/{game_id}/board.txt")
 
     assert response.status_code == 200
-    assert response.text == (
-        "- | - | -\n"
-        "---------\n"
-        "- | X | -\n"
-        "---------\n"
-        "- | O | -"
-    )
+    assert response.text == ("- | - | -\n---------\n- | X | -\n---------\n- | O | -")

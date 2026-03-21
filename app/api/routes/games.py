@@ -99,8 +99,7 @@ def list_moves(game_id: str) -> MoveListResponse:
     return MoveListResponse(
         game_id=game.id,
         moves=[
-            MoveSummary(player=move.player, x=move.x, y=move.y)
-            for move in game.moves
+            MoveSummary(player=move.player, x=move.x, y=move.y) for move in game.moves
         ],
     )
 

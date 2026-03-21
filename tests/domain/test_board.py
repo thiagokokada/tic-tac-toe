@@ -1,5 +1,6 @@
-import pytest
 import random
+
+import pytest
 
 from app.domain.board import (
     apply_move,

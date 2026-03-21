@@ -1,7 +1,7 @@
 import random
 
 from app.domain.exceptions import CellOccupiedError
-from app.domain.schemas import Board, Coordinates, Cell, GameStatus
+from app.domain.schemas import Board, Cell, Coordinates, GameStatus
 
 
 def new_board() -> Board:
@@ -29,7 +29,7 @@ def make_computer_move(
     if not moves:
         return board, None
 
-    x, y = (rng.choice(moves) if rng is not None else random.choice(moves))
+    x, y = rng.choice(moves) if rng is not None else random.choice(moves)
     return apply_move(board, x=x, y=y, cell=Cell.O), (x, y)
 
 
@@ -79,7 +79,4 @@ def check_game_result(board: Board) -> GameStatus:
 
 
 def render_board(board: Board) -> str:
-    return "\n---------\n".join(
-        " | ".join(str(cell) for cell in row)
-        for row in board
-    )
+    return "\n---------\n".join(" | ".join(str(cell) for cell in row) for row in board)

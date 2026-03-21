@@ -49,10 +49,12 @@ Run only API tests:
 uv run pytest tests/api/test_games.py
 ```
 
-Run type checks:
+Run linters:
 
 ```bash
 uv run mypy .
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 ## API Overview
