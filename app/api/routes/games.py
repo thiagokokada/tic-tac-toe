@@ -1,6 +1,3 @@
-from datetime import datetime, timezone
-from uuid import uuid4
-
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.schemas import (
@@ -12,34 +9,21 @@ from app.api.schemas import (
     MoveResponse,
     MoveSummary,
 )
-from app.domain.board import (
-    apply_move,
-    check_game_result,
-    check_winner,
-    make_computer_move,
-    new_board,
-)
-from app.domain.exceptions import GameError
-from app.domain.game import Game, Move
-from app.domain.schemas import Cell, GameStatus
+from app.domain.board import make_computer_move
+from app.domain.exceptions import GameError, GameFinishedError, GameNotFoundError
+from app.services import game_service
 
 router = APIRouter(prefix="/games", tags=["games"])
-games: dict[str, Game] = {}
+games = game_service.games
 
 
 @router.post("", response_model=CreateGameResponse, status_code=status.HTTP_201_CREATED)
 def create_game() -> CreateGameResponse:
-    game_id = str(uuid4())
-    created_at = datetime.now(timezone.utc)
-    games[game_id] = Game(
-        game_id=game_id,
-        created_at=created_at,
-        board=new_board(),
-    )
+    game = game_service.create_game()
 
     return CreateGameResponse(
-        game_id=game_id,
-        created_at=created_at,
+        game_id=game.game_id,
+        created_at=game.created_at,
     )
 
 
@@ -56,7 +40,7 @@ def list_games() -> GameListResponse:
                 created_at=game.created_at,
                 status=game.status,
             )
-            for game in sorted(games.values(), key=lambda game: game.created_at)
+            for game in game_service.list_games()
         ],
     )
 
@@ -67,47 +51,33 @@ def list_games() -> GameListResponse:
     status_code=status.HTTP_200_OK,
 )
 def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
-    if game_id in games:
-        game = games[game_id]
-    else:
+    try:
+        game, winner = game_service.make_move(
+            game_id=game_id,
+            x=move.x,
+            y=move.y,
+            computer_move_fn=make_computer_move,
+        )
+    except GameNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Game not found",
         )
-
-    if game.status != GameStatus.IN_PROGRESS:
+    except GameFinishedError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Game is already finished",
         )
-
-    try:
-        board = apply_move(game.board, x=move.x, y=move.y, cell=Cell.X)
     except GameError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(ex),
         )
-    game.moves.append(Move(player=Cell.X, x=move.x, y=move.y))
-
-    game_status = check_game_result(board)
-    winner = check_winner(board)
-
-    if game_status == GameStatus.IN_PROGRESS:
-        board, computer_move = make_computer_move(board)
-        if computer_move is not None:
-            game.moves.append(Move(player=Cell.O, x=computer_move[0], y=computer_move[1]))
-        game_status = check_game_result(board)
-        winner = check_winner(board)
-
-    game.board = board
-    game.status = game_status
-    games[game_id] = game
 
     return MoveResponse(
         game_id=game.game_id,
-        status=game_status,
-        board=board,
+        status=game.status,
+        board=game.board,
         winner=winner,
     )
 
@@ -118,13 +88,13 @@ def make_move(game_id: str, move: MoveRequest) -> MoveResponse:
     status_code=status.HTTP_200_OK,
 )
 def list_moves(game_id: str) -> MoveListResponse:
-    if game_id not in games:
+    try:
+        game = game_service.get_game(game_id)
+    except GameNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Game not found",
         )
-
-    game = games[game_id]
 
     return MoveListResponse(
         game_id=game.game_id,
