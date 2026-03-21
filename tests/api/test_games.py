@@ -38,7 +38,7 @@ def test_make_move_returns_200() -> None:
     assert data["status"] == str(GameStatus.IN_PROGRESS)
     assert data["winner"] is None
     assert data["board"] == [
-        [str(Cell.NEUTRAL), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
+        [str(Cell.O), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
         [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
         [str(Cell.NEUTRAL), str(Cell.NEUTRAL), str(Cell.NEUTRAL)],
     ]
@@ -70,21 +70,26 @@ def test_make_move_returns_422_for_invalid_move() -> None:
 def test_make_move_returns_player_won_when_x_completes_a_line() -> None:
     game_id = client.post("/games").json()["game_id"]
 
-    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
-    response = client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+    response = client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 2})
 
     assert response.status_code == 200
     assert response.json()["status"] == str(GameStatus.PLAYER_WON)
     assert response.json()["winner"] == str(Cell.X)
+    assert response.json()["board"] == [
+        [str(Cell.O), str(Cell.X), str(Cell.O)],
+        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
+        [str(Cell.NEUTRAL), str(Cell.X), str(Cell.NEUTRAL)],
+    ]
 
 
 def test_make_move_returns_400_when_game_is_already_finished() -> None:
     game_id = client.post("/games").json()["game_id"]
 
-    client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 0})
     client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 0})
-    client.post(f"/games/{game_id}/moves", json={"x": 2, "y": 0})
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 1})
+    client.post(f"/games/{game_id}/moves", json={"x": 1, "y": 2})
     response = client.post(f"/games/{game_id}/moves", json={"x": 0, "y": 1})
 
     assert response.status_code == 400
