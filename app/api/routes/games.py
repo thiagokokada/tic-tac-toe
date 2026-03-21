@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.api.schemas import (
     CreateGameResponse,
+    GameListResponse,
+    GameSummary,
     MoveListResponse,
     MoveRequest,
     MoveResponse,
@@ -38,6 +40,24 @@ def create_game() -> CreateGameResponse:
     return CreateGameResponse(
         game_id=game_id,
         created_at=created_at,
+    )
+
+
+@router.get(
+    "",
+    response_model=GameListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def list_games() -> GameListResponse:
+    return GameListResponse(
+        games=[
+            GameSummary(
+                game_id=game.game_id,
+                created_at=game.created_at,
+                status=game.status,
+            )
+            for game in sorted(games.values(), key=lambda game: game.created_at)
+        ],
     )
 
 

@@ -8,6 +8,7 @@ from app.domain.schemas import Board, Cell, GameStatus
 import app.api.routes.games as games_routes
 from app.main import app
 
+import pytest
 from pytest import MonkeyPatch
 
 
@@ -18,6 +19,11 @@ def deterministic_make_computer_move(
     board: list[list[Cell]],
 ) -> tuple[Board, tuple[int, int] | None]:
     return make_computer_move(board, rng=random.Random(0))
+
+
+@pytest.fixture(autouse=True)
+def clear_games() -> None:
+    games_routes.games.clear()
 
 
 def test_create_game_returns_201() -> None:
@@ -132,3 +138,19 @@ def test_list_moves_returns_moves_in_chronological_order(
             {"player": str(Cell.O), "x": 1, "y": 2},
         ],
     }
+
+
+def test_list_games_returns_games_in_chronological_order(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    first_game_id = client.post("/games").json()["game_id"]
+    second_game_id = client.post("/games").json()["game_id"]
+
+    response = client.get("/games")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert [game["game_id"] for game in data["games"]] == [first_game_id, second_game_id]
+    assert data["games"][0]["status"] == str(GameStatus.IN_PROGRESS)
+    assert data["games"][1]["status"] == str(GameStatus.IN_PROGRESS)

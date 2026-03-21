@@ -10,6 +10,12 @@ class CreateGameResponse(BaseModel):
     created_at: datetime
 
 
+class GameSummary(BaseModel):
+    game_id: str
+    created_at: datetime
+    status: GameStatus
+
+
 class MoveRequest(BaseModel):
     x: int = Field(ge=0, le=2)
     y: int = Field(ge=0, le=2)
@@ -31,3 +37,7 @@ class MoveResponse(BaseModel):
 class MoveListResponse(BaseModel):
     game_id: str
     moves: list[MoveSummary]
+
+
+class GameListResponse(BaseModel):
+    games: list[GameSummary]
