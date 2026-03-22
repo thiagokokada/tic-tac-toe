@@ -11,7 +11,7 @@ from app.api.schemas import (
     MoveSummary,
 )
 from app.domain.exceptions import GameError, GameFinishedError, GameNotFoundError
-from app.domain.game import make_computer_move
+from app.domain.game import computer_random_move
 from app.services import game_service
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -20,7 +20,7 @@ games = game_service.games
 
 @router.post("", response_model=CreateGameResponse, status_code=status.HTTP_201_CREATED)
 def create_game() -> CreateGameResponse:
-    game = game_service.create_game(computer_move_fn=make_computer_move)
+    game = game_service.create_game(computer_move_fn=computer_random_move)
 
     return CreateGameResponse(
         game_id=game.id,

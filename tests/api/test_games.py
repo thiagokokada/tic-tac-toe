@@ -6,9 +6,8 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.routes.games as games_routes
-from app.domain.board import Board
-from app.domain.game import make_computer_move
-from app.domain.schemas import Cell, ComputerMoveResult, GameStatus
+from app.domain.game import computer_random_move
+from app.domain.schemas import Cell, Coordinates, GameStatus
 from app.main import app
 
 client = TestClient(app)
@@ -16,14 +15,16 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup(monkeypatch: MonkeyPatch) -> None:
-    def deterministic_make_computer_move(board: Board) -> ComputerMoveResult:
-        return make_computer_move(board, rng=random.Random(0))
+    def computer_deterministic_move(
+        available_moves: list[Coordinates],
+    ) -> Coordinates | None:
+        return computer_random_move(available_moves, rng=random.Random(0))
 
     games_routes.games.clear()
     monkeypatch.setattr(
         games_routes,
-        "make_computer_move",
-        deterministic_make_computer_move,
+        "computer_random_move",
+        computer_deterministic_move,
     )
 
 

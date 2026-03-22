@@ -8,24 +8,22 @@ from app.domain.exceptions import GameFinishedError
 from app.domain.schemas import (
     Cell,
     ComputerMoveFn,
-    ComputerMoveResult,
     Coordinates,
     GameStatus,
 )
 
 
-def make_computer_move(
-    board: Board,
+def computer_random_move(
+    available_moves: list[Coordinates],
     rng: random.Random | None = None,
-) -> ComputerMoveResult:
-    moves = board.available_moves()
-    if not moves:
+) -> Coordinates | None:
+    if not available_moves:
         return None
 
     if rng is None:
         rng = random.Random()
 
-    x, y = rng.choice(moves)
+    x, y = rng.choice(available_moves)
     return Coordinates(x, y)
 
 
@@ -43,7 +41,7 @@ class Game:
     board: Board = field(default_factory=Board)
     status: GameStatus = GameStatus.IN_PROGRESS
     moves: list[Move] = field(default_factory=list)
-    computer_move_fn: ComputerMoveFn = make_computer_move
+    computer_move_fn: ComputerMoveFn = computer_random_move
 
     def winner(self) -> Cell | None:
         return self.board.check_winner()
@@ -55,7 +53,7 @@ class Game:
         if not self._in_progress():
             return
 
-        move = self.computer_move_fn(self.board)
+        move = self.computer_move_fn(self.board.available_moves())
         if move is not None:
             self._apply_move(x=move.x, y=move.y, player=Cell.O)
 

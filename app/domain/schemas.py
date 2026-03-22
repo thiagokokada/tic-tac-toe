@@ -1,14 +1,9 @@
 from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, Final, NamedTuple
-
-if TYPE_CHECKING:
-    from app.domain.board import Board
-
+from typing import Final, NamedTuple
 
 type BoardData = list[list[Cell]]
-type ComputerMoveResult = Coordinates | None
-type ComputerMoveFn = Callable[[Board], ComputerMoveResult]
+type ComputerMoveFn = Callable[[list[Coordinates]], Coordinates | None]
 
 
 class Coordinates(NamedTuple):

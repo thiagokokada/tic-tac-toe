@@ -4,7 +4,7 @@ import pytest
 
 from app.domain.board import Board
 from app.domain.exceptions import GameFinishedError
-from app.domain.game import Game, make_computer_move
+from app.domain.game import Game, computer_random_move
 from app.domain.schemas import Cell
 
 
@@ -38,7 +38,9 @@ def test_apply_player_move_updates_board_moves_and_status() -> None:
 
 def test_move_history_is_kept_in_chronological_order() -> None:
     game = Game(
-        computer_move_fn=lambda board: make_computer_move(board, rng=random.Random(0))
+        computer_move_fn=lambda available_moves: computer_random_move(
+            available_moves, rng=random.Random(0)
+        )
     )
 
     game.apply_player_move(1, 1)
@@ -59,7 +61,9 @@ def test_apply_computer_move_places_o_in_available_position() -> None:
                 [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
             ]
         ),
-        computer_move_fn=lambda board: make_computer_move(board, rng=random.Random(0)),
+        computer_move_fn=lambda available_moves: computer_random_move(
+            available_moves, rng=random.Random(0)
+        ),
     )
 
     game.apply_computer_move()
@@ -85,7 +89,9 @@ def test_apply_computer_move_raises_when_no_moves_are_available() -> None:
     )
     game = Game(
         board=board,
-        computer_move_fn=lambda board: make_computer_move(board, rng=random.Random(0)),
+        computer_move_fn=lambda available_moves: computer_random_move(
+            available_moves, rng=random.Random(0)
+        ),
     )
 
     with pytest.raises(GameFinishedError, match="Game is already finished"):
