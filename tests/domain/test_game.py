@@ -50,22 +50,6 @@ def test_move_history_is_kept_in_chronological_order() -> None:
     ]
 
 
-def test_ensure_in_progress_raises_when_game_is_finished() -> None:
-    game = Game(
-        board=Board(
-            [
-                [Cell.X, Cell.X, Cell.X],
-                [Cell.NEUTRAL, Cell.O, Cell.NEUTRAL],
-                [Cell.O, Cell.NEUTRAL, Cell.O],
-            ]
-        )
-    )
-    game.update_status()
-
-    with pytest.raises(GameFinishedError, match="Game is already finished"):
-        game.ensure_in_progress()
-
-
 def test_apply_computer_move_places_o_in_available_position() -> None:
     game = Game(
         board=Board(
@@ -78,15 +62,20 @@ def test_apply_computer_move_places_o_in_available_position() -> None:
         computer_move_fn=lambda board: make_computer_move(board, rng=random.Random(0)),
     )
 
-    move = game.apply_computer_move()
+    game.apply_computer_move()
 
-    assert move in [(1, 0), (0, 1), (2, 1), (1, 2), (2, 2)]
-    assert game.board.data[move[1]][move[0]] == Cell.O
     assert game.moves[-1].player == Cell.O
-    assert (game.moves[-1].x, game.moves[-1].y) == move
+    assert (game.moves[-1].x, game.moves[-1].y) in [
+        (1, 0),
+        (0, 1),
+        (2, 1),
+        (1, 2),
+        (2, 2),
+    ]
+    assert game.board.data[game.moves[-1].y][game.moves[-1].x] == Cell.O
 
 
-def test_apply_computer_move_returns_none_when_no_moves_are_available() -> None:
+def test_apply_computer_move_raises_when_no_moves_are_available() -> None:
     board = Board(
         [
             [Cell.X, Cell.O, Cell.X],
@@ -99,8 +88,24 @@ def test_apply_computer_move_returns_none_when_no_moves_are_available() -> None:
         computer_move_fn=lambda board: make_computer_move(board, rng=random.Random(0)),
     )
 
-    move = game.apply_computer_move()
-
-    assert move is None
+    with pytest.raises(GameFinishedError, match="Game is already finished"):
+        game.apply_player_move(0, 0)
     assert game.board.data == board.data
+    assert game.moves == []
+
+
+def test_apply_computer_move_returns_none_when_game_is_already_finished() -> None:
+    game = Game(
+        board=Board(
+            [
+                [Cell.X, Cell.X, Cell.X],
+                [Cell.NEUTRAL, Cell.O, Cell.NEUTRAL],
+                [Cell.O, Cell.NEUTRAL, Cell.NEUTRAL],
+            ]
+        )
+    )
+
+    game.apply_computer_move()
+
+    assert game.status.value == "player_won"
     assert game.moves == []

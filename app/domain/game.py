@@ -26,7 +26,6 @@ def make_computer_move(
         rng = random.Random()
 
     x, y = rng.choice(moves)
-    board.apply_move(x=x, y=y, cell=Cell.O)
     return Coordinates(x, y)
 
 
@@ -49,28 +48,30 @@ class Game:
     def winner(self) -> Cell | None:
         return self.board.check_winner()
 
-    def update_status(self) -> GameStatus:
-        self.status = self.board.check_game_result()
-        return self.status
-
-    def ensure_in_progress(self) -> None:
-        if self.status != GameStatus.IN_PROGRESS:
-            raise GameFinishedError()
-
-    def apply_move(self, x: int, y: int, player: Cell) -> None:
-        self.board.apply_move(x=x, y=y, cell=player)
-        self.moves.append(Move(player=player, x=x, y=y))
-        self.update_status()
-
     def apply_player_move(self, x: int, y: int) -> None:
-        self.apply_move(x=x, y=y, player=Cell.X)
+        self._apply_move(x=x, y=y, player=Cell.X)
 
-    def apply_computer_move(self) -> tuple[int, int] | None:
+    def apply_computer_move(self) -> None:
+        if not self._in_progress():
+            return
+
         move = self.computer_move_fn(self.board)
         if move is not None:
-            self.moves.append(Move(player=Cell.O, x=move.x, y=move.y))
-        self.update_status()
-        return None if move is None else (move.x, move.y)
+            self._apply_move(x=move.x, y=move.y, player=Cell.O)
 
     def render_board(self) -> str:
         return self.board.render()
+
+    def _update_status(self) -> GameStatus:
+        self.status = self.board.check_game_result()
+        return self.status
+
+    def _in_progress(self) -> bool:
+        return self._update_status() == GameStatus.IN_PROGRESS
+
+    def _apply_move(self, x: int, y: int, player: Cell) -> None:
+        if not self._in_progress():
+            raise GameFinishedError()
+        self.board.apply_move(x=x, y=y, cell=player)
+        self.moves.append(Move(player=player, x=x, y=y))
+        self._update_status()

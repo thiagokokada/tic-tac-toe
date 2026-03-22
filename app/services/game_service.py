@@ -1,6 +1,6 @@
 from app.domain.exceptions import GameNotFoundError
 from app.domain.game import Game, Move
-from app.domain.schemas import Cell, ComputerMoveFn, GameStatus
+from app.domain.schemas import Cell, ComputerMoveFn
 
 games: dict[str, Game] = {}
 
@@ -32,11 +32,8 @@ def make_move(
 ) -> tuple[Game, Cell | None]:
     game = get_game(game_id)
 
-    game.ensure_in_progress()
     game.apply_player_move(x=x, y=y)
-
-    if game.status == GameStatus.IN_PROGRESS:
-        game.apply_computer_move()
+    game.apply_computer_move()
 
     games[game_id] = game
 
