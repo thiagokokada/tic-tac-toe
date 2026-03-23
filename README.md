@@ -1,6 +1,7 @@
 # Tic-Tac-Toe API
 
-A small FastAPI service that lets a player play tic-tac-toe against the computer through a REST API.
+A small FastAPI service that lets a player play tic-tac-toe against the
+computer through a REST API.
 
 ## Requirements
 
@@ -163,17 +164,52 @@ Example response:
 - | O | -
 ```
 
+## Why ___?
+
+### FastAPI
+
+My initial idea was to use [Flask](https://flask.palletsprojects.com/) since
+this is what I am mostly used, but I was curious about
+[FastAPI](https://fastapi.tiangolo.com/) for a while. All my recent Python
+projects are done with type annotations, so having a fully typed framework was
+an interesting choice for this project.
+
+I also like the idea of having `Pydantic` to validate all request/response
+schemas, and the fact that I can get documentation generated automatically from
+the schemas is a bonus.
+
+### pytest
+
+I much prefer to write tests using `pytest` instead of `unittest`, since they
+require less boilerplate.
+
+### uv/ruff
+
+Very fast formatter/linter and dependency manager. This basically replaced the
+`black`/`pylint`/`pip`/`Poetry` for most of my recent projects.
+
+### mypy
+
+I am very interested in [ty](https://docs.astral.sh/ty/) from the same creators
+of uv/ruff, but it is still in alpha, so I decided to use the good-old
+[mypy](https://mypy-lang.org/). Yes, `mypy` is slow, but it doesn't matter too
+much in such a small codebase.
+
+I also spent all my [innovation
+tokens](https://mcfunley.com/choose-boring-technology) in FastAPI already.
+
 ## Notes
 
 - Game state is currently stored in memory.
 - Restarting the app clears all games.
 - Move coordinates are zero-based.
 - The computer move is random in the application.
-- `board.txt` is included as a small extra feature for a friendlier CLI/demo experience.
 - Took around 4 hours to implement.
 
 ## Assumptions And Trade-Offs
 
 - The player always goes first as `X`.
 - The computer always plays as `O`.
+- There is no persistent storage.
+- Board is 3x3.
 - The API is intentionally simple and unauthenticated.
