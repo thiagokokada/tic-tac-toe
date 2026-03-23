@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Final
 
 from app.domain.exceptions import CellOccupiedError
 from app.domain.schemas import (
@@ -8,13 +9,11 @@ from app.domain.schemas import (
     GameStatus,
 )
 
+N: Final = 3
+
 
 def _new_board() -> BoardData:
-    return [
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-        [Cell.NEUTRAL, Cell.NEUTRAL, Cell.NEUTRAL],
-    ]
+    return [[Cell.NEUTRAL for _x in range(N)] for _y in range(N)]
 
 
 @dataclass(slots=True)
@@ -30,7 +29,7 @@ class Board:
         ]
 
     def apply_move(self, x: int, y: int, cell: Cell) -> BoardData:
-        assert 0 <= x <= 2 and 0 <= y <= 2, f"Invalid coordinates: x={x}, y={y}"
+        assert 0 <= x <= N - 1 and 0 <= y <= N - 1, f"Invalid coordinates: x={x}, y={y}"
 
         if (c := self.data[y][x]) != Cell.NEUTRAL:
             raise CellOccupiedError(x=x, y=y, cell=c)
@@ -39,20 +38,23 @@ class Board:
         return self.data
 
     def check_winner(self) -> Cell | None:
-        lines = [
-            self.data[0],
-            self.data[1],
-            self.data[2],
-            [self.data[0][0], self.data[1][0], self.data[2][0]],
-            [self.data[0][1], self.data[1][1], self.data[2][1]],
-            [self.data[0][2], self.data[1][2], self.data[2][2]],
-            [self.data[0][0], self.data[1][1], self.data[2][2]],
-            [self.data[0][2], self.data[1][1], self.data[2][0]],
-        ]
+        lines = []
+
+        # rows
+        lines.extend(self.data)
+
+        # columns
+        lines.extend([self.data[y][x] for y in range(N)] for x in range(N))
+
+        # main diagonal
+        lines.append([self.data[i][i] for i in range(N)])
+
+        # anti diagonal
+        lines.append([self.data[i][N - 1 - i] for i in range(N)])
 
         for line in lines:
             first = line[0]
-            if first != Cell.NEUTRAL and line[0] == line[1] == line[2]:
+            if first is not Cell.NEUTRAL and all(cell == first for cell in line):
                 return first
 
         return None

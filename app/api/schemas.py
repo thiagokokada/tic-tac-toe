@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.domain.board import N
 from app.domain.schemas import BoardData, Cell, GameStatus
 
 
@@ -17,8 +18,8 @@ class GameSummary(BaseModel):
 
 
 class MoveRequest(BaseModel):
-    x: int = Field(ge=0, le=2)
-    y: int = Field(ge=0, le=2)
+    x: int = Field(ge=0, le=N - 1)
+    y: int = Field(ge=0, le=N - 1)
 
 
 class MoveSummary(BaseModel):
